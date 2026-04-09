@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDEKU Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;font-size:13px;color:#333;background:#f2f2f2;min-height:100vh;display:flex}
+.nav{width:200px;flex-shrink:0;background:#fff;border-right:1px solid #e8e8e8;display:flex;flex-direction:column;min-height:100vh;position:fixed;top:0;left:0;z-index:100;transition:width .2s ease}
+.nav.collapsed{width:52px}
+.nav-logo{padding:14px 16px;border-bottom:1px solid #f2f2f2;display:flex;align-items:center;justify-content:space-between;overflow:hidden;min-height:52px}
+.nav-logo-text{font-size:18px;font-weight:600;color:#8c0000;letter-spacing:-0.5px;white-space:nowrap;transition:opacity .15s}
+.nav.collapsed .nav-logo-text{opacity:0;pointer-events:none;width:0}
+.nav-toggle{background:none;border:none;cursor:pointer;color:#828282;font-size:16px;flex-shrink:0;padding:2px;line-height:1}
+.nav-toggle:hover{color:#333}
+.nav-user{padding:10px;border-bottom:1px solid #f2f2f2;display:flex;align-items:center;gap:8px;overflow:hidden;min-height:52px}
+.nav-avatar{width:28px;height:28px;border-radius:50%;background:#8c0000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.nav-user-info{overflow:hidden;white-space:nowrap;transition:opacity .15s}
+.nav.collapsed .nav-user-info{opacity:0;width:0;pointer-events:none}
+.nav-body{flex:1;overflow:hidden;padding:8px 0}
+.nav-section-label{font-size:10px;font-weight:600;color:#b0b0b0;letter-spacing:.8px;text-transform:uppercase;padding:8px 16px 4px;white-space:nowrap;transition:opacity .15s}
+.nav.collapsed .nav-section-label{opacity:0;height:0;padding:0;pointer-events:none}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:#555;cursor:pointer;border-left:3px solid transparent;transition:all .15s;white-space:nowrap;overflow:hidden;position:relative}
+.nav-item:hover{background:#fafafa;color:#333}
+.nav-item.active{color:#8c0000;font-weight:600;background:#fff5f5;border-left-color:#8c0000}
+.nav-item .n-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .n-label{transition:opacity .15s}
+.nav.collapsed .nav-item .n-label{opacity:0;width:0;overflow:hidden}
+.nav.collapsed .nav-item{padding:9px 14px;justify-content:center}
+.nav.collapsed .nav-item:hover::after{content:attr(data-label);position:absolute;left:52px;top:50%;transform:translateY(-50%);background:#333;color:#fff;font-size:12px;padding:5px 10px;border-radius:5px;white-space:nowrap;z-index:200;pointer-events:none}
+.nav-divider{height:1px;background:#f2f2f2;margin:6px 0}
+.main{margin-left:200px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .2s ease}
+.main.collapsed{margin-left:52px}
+.topbar{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:16px;font-size:12px;color:#828282}
+.content{flex:1;padding:20px 24px}
+.pane{display:none}.pane.active{display:flex;flex-direction:column;flex:1}
+
+.btn-p{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border-radius:5px;font-size:13px;font-family:'Poppins',sans-serif;font-weight:600;cursor:pointer;border:none;color:#fff;background:linear-gradient(142deg,#c44345 4%,#800c2d 94%);white-space:nowrap}
+.btn-p:hover{opacity:.9}.btn-p:disabled{opacity:.35;cursor:not-allowed}
+.btn-o{display:inline-flex;align-items:center;justify-content:center;padding:7px 16px;border-radius:5px;font-size:13px;font-family:'Poppins',sans-serif;font-weight:600;cursor:pointer;border:1px solid #c44345;background:#fff;color:#8c0000}
+.btn-g{display:inline-flex;align-items:center;justify-content:center;padding:7px 16px;border-radius:5px;font-size:13px;font-family:'Poppins',sans-serif;font-weight:400;cursor:pointer;border:1px solid #e0e0e0;background:#fff;color:#333}
+.btn-g:hover:not(:disabled){background:#f9f9f9}.btn-g:disabled{color:#c8c8c8;border-color:#efefef;cursor:not-allowed}
+.btn-t{display:inline-flex;align-items:center;padding:7px 10px;font-size:13px;font-family:'Poppins',sans-serif;cursor:pointer;border:none;background:transparent;color:#828282}
+.btn-t:hover{color:#333}
+.dvd{width:1px;height:20px;background:#e0e0e0;flex-shrink:0}
+
+.toast{display:none;align-items:center;gap:10px;border-radius:5px;padding:10px 16px;margin-bottom:12px;font-size:13px}
+.toast.show{display:flex}
+.t-ok{background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32}
+.t-rm{background:#fff3e0;border:1px solid #ffcc80;color:#e65100}
+
+/* list */
+.list-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden}
+.toolbar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #f2f2f2;min-height:54px;gap:12px}
+.search-wrap{display:flex;align-items:center;justify-content:space-between;background:#fcfcfc;border:1px solid #f2f2f2;border-radius:5px;padding:8px 10px;width:240px;flex-shrink:0}
+.search-wrap span{font-size:12px;color:#828282}
+.s-icon{color:#8c0000;font-size:16px}
+.tb-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.bulk-tb{display:none;align-items:center;width:100%;gap:10px}
+.bulk-tb.on{display:flex}
+.bleft{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.bright{display:flex;align-items:center;gap:8px;margin-left:auto}
+.cat-sel{height:32px;border:1px solid #e0e0e0;border-radius:5px;padding:0 28px 0 10px;font-size:12px;font-family:'Poppins',sans-serif;color:#333;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23828282' d='M5 7L0 2h10z'/%3E%3C/svg%3E") no-repeat right 8px center;cursor:pointer;appearance:none;outline:none}
+.confirm-msg{font-size:12px;color:#333;max-width:380px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;font-size:12px;font-weight:600;color:#fff;background:#73000c;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #f2f2f2;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.sel td{background:#fff5f5}
+tr.clickable:not(.sel):hover td{background:#fafafa;cursor:pointer}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#8c0000}
+.item-cell{display:flex;align-items:center;gap:10px}
+.thumb{width:32px;height:32px;border-radius:6px;background:#f2f2f2;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.iname{font-weight:500}
+.icat{font-size:11px;color:#828282;margin-top:2px}
+.icat.none{color:#c8c8c8}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.b-bcrs{background:#fde8ea;color:#8c0000;border:1px solid #f5c2c4}
+.act-icons{display:flex;gap:10px;align-items:center}
+.ico{background:none;border:none;cursor:pointer;color:#8c0000;font-size:14px;padding:2px;opacity:.7}
+.ico:hover{opacity:1}
+
+/* detail */
+.detail-wrap{display:flex;flex:1;background:#fff;border-radius:8px;border:1px solid #e0e0e0;overflow:hidden}
+.dleft{flex:1;padding:24px;overflow-y:auto;border-right:1px solid #f2f2f2}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#8c0000;cursor:pointer;border:none;background:none;padding:0;margin-bottom:16px;font-family:'Poppins',sans-serif}
+.mode-tag{display:inline-block;margin-bottom:16px;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;background:#e8eef8;color:#072446}
+.sdiv{height:1px;background:#e0e0e0;margin:20px 0}
+.slbl{font-size:11px;font-weight:600;color:#828282;letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px}
+.drow{display:flex;gap:8px;margin-bottom:14px;align-items:flex-start}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.lbl{font-size:12px;color:#333;display:flex;align-items:center;gap:3px}
+.req{color:#fb4141}
+.hint{width:12px;height:12px;border-radius:50%;background:#bdbdbd;display:inline-flex;align-items:center;justify-content:center;font-size:7px;color:#fff;cursor:help;flex-shrink:0}
+.inp{height:40px;border:1px solid #e0e0e0;border-radius:5px;padding:0 10px;font-size:14px;font-family:'Poppins',sans-serif;color:#333;background:#fff;outline:none;width:100%}
+.inp::placeholder{color:#c5c5c5}.inp:focus{border-color:#828282}
+.fsel{height:40px;border:1px solid #e0e0e0;border-radius:5px;padding:0 10px;font-size:14px;font-family:'Poppins',sans-serif;color:#333;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23828282' d='M5 7L0 2h10z'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer;appearance:none;outline:none;width:100%}
+.sgd{position:relative;flex:1}.sgd .pfx{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:#828282;pointer-events:none}.sgd .inp{padding-left:42px}
+.ta{border:1px solid #e0e0e0;border-radius:5px;padding:10px;font-size:14px;font-family:'Poppins',sans-serif;color:#333;background:#fff;outline:none;width:100%;resize:none;line-height:1.5}
+.trow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.tgl{position:relative;width:40px;height:24px;cursor:pointer;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.sldr{position:absolute;inset:0;border-radius:24px;background:#e0e0e0;transition:.2s}
+.sldr:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}
+.tgl input:checked+.sldr{background:#072446}
+.tgl input:checked+.sldr:before{transform:translateX(16px)}
+.tstate{font-size:14px;color:#072446}
+.rgroup{display:flex;gap:20px;margin-top:6px}
+.ropt{display:flex;align-items:center;gap:8px;font-size:14px;color:#333;cursor:pointer}
+.ropt input{accent-color:#8c0000;width:16px;height:16px}
+.expand{overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s ease}
+.expand.open{max-height:140px;opacity:1;margin-top:10px}
+.gcircle{width:40px;height:40px;border-radius:50%;background:#008a4b;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#fff;flex-shrink:0}
+.glabel{background:#fff;border:1px solid #000;border-left:none;border-radius:0 8px 8px 0;padding:2px 8px 2px 6px;font-size:10px;line-height:1.3}
+.thumb-tabs{display:flex;gap:16px;font-size:12px;color:#828282;margin-bottom:10px}
+.thumb-tabs .act{color:#8c0000;border-bottom:2px solid #8c0000;padding-bottom:2px}
+.thumb-box{width:140px;height:140px;border-radius:8px;background:#f9f9f9;border:1px dashed #e0e0e0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;color:#828282;font-size:11px;margin-bottom:24px}
+.bottom-bar{display:flex;justify-content:flex-end;gap:12px;padding-top:20px;border-top:1px solid #e0e0e0;margin-top:20px}
+.dright{width:280px;flex-shrink:0;background:#fafafa;padding:16px}
+.ptitle{font-size:12px;font-weight:500;color:#333;margin-bottom:4px}
+.psub{font-size:11px;color:#828282;margin-bottom:16px}
+.pframe{background:#fff;border-radius:12px;border:1px solid #e0e0e0;overflow:hidden}
+.pimg{height:120px;background:linear-gradient(135deg,#f2f2f2,#e0e0e0);display:flex;align-items:center;justify-content:center;font-size:32px}
+.pcontent{padding:12px}
+.pname{font-size:14px;font-weight:600;margin-bottom:3px}
+.pprice{font-size:13px;color:#8c0000;font-weight:600;margin-bottom:5px}
+.pdesc{font-size:11px;color:#828282;line-height:1.5;margin-bottom:8px}
+.pbcrs{display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:7px 10px;font-size:11px;color:#e65100;margin-bottom:8px;line-height:1.4}
+.pbcrs.show{display:block}
+.padd{background:linear-gradient(142deg,#c44345 4%,#800c2d 94%);color:#fff;border:none;border-radius:6px;width:100%;padding:9px;font-size:12px;font-family:'Poppins',sans-serif;font-weight:600;cursor:pointer}
+
+/* settings */
+.set-inner{display:flex;flex:1;background:#fff;border-radius:8px;border:1px solid #e0e0e0;overflow:hidden}
+.set-body{flex:1;padding:24px 28px;overflow-y:auto}
+.set-info-banner{background:#fdf6e3;border:1px solid #e8d98a;border-radius:6px;padding:11px 14px;margin-bottom:20px;font-size:13px;color:#555}
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px}
+.sf{display:flex;flex-direction:column;gap:5px}
+.sf .lbl{font-size:12px;color:#555}
+.sf .sinp{height:38px;border:1px solid #e0e0e0;border-radius:5px;padding:0 10px;font-size:13px;font-family:'Poppins',sans-serif;color:#333;background:#f5f5f5;outline:none;width:100%}
+.sf .ssel{height:38px;border:1px solid #e0e0e0;border-radius:5px;padding:0 10px;font-size:13px;font-family:'Poppins',sans-serif;color:#333;background:#f5f5f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23828282' d='M5 7L0 2h10z'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;outline:none;width:100%;cursor:pointer}
+.set-divider{height:1px;background:#f2f2f2;margin:16px 0}
+.set-radio-row{display:flex;gap:24px;margin-top:6px;flex-wrap:wrap}
+.sropt{display:flex;align-items:center;gap:7px;font-size:13px;color:#333;cursor:pointer}
+.sropt input{accent-color:#8c0000;width:15px;height:15px;cursor:pointer}
+.set-footer{display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #f2f2f2}
+
+/* BCRS radio */
+.bcrs-radio-wrap{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.bcrs-ropt{display:flex;align-items:flex-start;gap:10px;cursor:pointer;pointer-events:none}
+.bcrs-ropt.editable{pointer-events:auto;cursor:pointer}
+.bcrs-ropt input[type=radio]{accent-color:#8c0000;width:15px;height:15px;margin-top:2px;flex-shrink:0;cursor:pointer}
+.bcrs-ropt input[type=radio]:disabled{accent-color:#c8c8c8;cursor:not-allowed}
+.bcrs-card-title{font-size:13px;font-weight:600;color:#333;margin-bottom:2px}
+.bcrs-card-desc{font-size:12px;color:#828282;line-height:1.6}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:10px;padding:24px;width:400px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-title{font-size:14px;font-weight:600;color:#333}
+.modal-body{font-size:13px;color:#555;line-height:1.7;margin:12px 0 20px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px}
+</style>
+
+<!-- NEA Modal -->
+<div class="modal-overlay" id="nea-modal" onclick="if(event.target===this)cancelAbsorb()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="modal-title">NEA Approval Required</div>
+      <span onclick="cancelAbsorb()" style="font-size:18px;color:#828282;cursor:pointer;line-height:1;padding:0 4px">✕</span>
+    </div>
+    <div class="modal-body">
+      To use <strong>Absorb deposit</strong>, your outlet must be enrolled in NEA's <strong>Return Right F&amp;B Scheme</strong>. Once approved, NEA will issue an official BCRS decal for on-premises display.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-g" onclick="window.open('https://www.nea.gov.sg/our-services/waste-management/beverage-container-return-scheme','_blank');cancelAbsorb()">Apply on NEA website</button>
+      <button class="btn-p" onclick="confirmAbsorb()">I've already applied</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="nav" id="nav">
+  <div class="nav-logo">
+    <span class="nav-logo-text">ideku</span>
+    <button class="nav-toggle" id="nav-toggle-btn" onclick="toggleNav()">◀</button>
+  </div>
+  <div class="nav-user">
+    <div class="nav-avatar">T</div>
+    <div class="nav-user-info">
+      <div style="font-size:12px;font-weight:600">Vino Rosso</div>
+      <div style="font-size:10px;color:#828282">Admin</div>
+    </div>
+  </div>
+  <div class="nav-body">
+    <div class="nav-section-label">Catalogue</div>
+    <div class="nav-item active" id="nav-menu" data-label="Item List" onclick="switchNav('menu')">
+      <span class="n-icon">☰</span><span class="n-label">Item List</span>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Configuration</div>
+    <div class="nav-item" id="nav-settings" data-label="Settings" onclick="switchNav('settings')">
+      <span class="n-icon">⚙</span><span class="n-label">Settings</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Item List</div>
+    <div class="topbar-right"><span>Currency : SGD ($)</span><span>Country : 🇸🇬</span></div>
+  </div>
+  <div class="content">
+
+    <!-- PANE: LIST -->
+    <div class="pane active" id="pane-menu">
+      <div class="toast" id="ltost"><span id="ltost-msg"></span></div>
+      <div class="list-card">
+        <div class="toolbar" id="tb-normal">
+          <div class="search-wrap"><span>Search All 124 items / item code</span><span class="s-icon">⌕</span></div>
+          <div class="tb-right">
+            <button class="btn-g" onclick="enterBulk()">Bulk Edit</button>
+            <button class="btn-p" onclick="goDetail(null)">+ Create Item</button>
+          </div>
+        </div>
+        <div class="toolbar bulk-tb" id="tb-bulk">
+          <div class="bleft">
+            <input type="checkbox" id="sel-all">
+            <span id="sel-count" style="font-size:13px;color:#828282;white-space:nowrap">0 items selected</span>
+            <div class="dvd"></div>
+            <select class="cat-sel" id="cat-sel" onchange="onCatFilter()"><option value="">All Categories</option></select>
+          </div>
+          <div class="bright" id="bulk-acts">
+            <button class="btn-p" id="flag-btn" disabled onclick="enterConfirm('flag')">Flag as BCRS</button>
+            <button class="btn-g" id="rm-btn" disabled onclick="enterConfirm('remove')">Remove BCRS</button>
+            <div class="dvd"></div>
+            <button class="btn-t" onclick="exitBulk()">Cancel</button>
+          </div>
+          <div class="bright" id="bulk-confirm" style="display:none">
+            <span class="confirm-msg" id="confirm-msg"></span>
+            <button class="btn-p" onclick="applyAction()">Confirm</button>
+            <button class="btn-g" onclick="backFromConfirm()">Back</button>
+          </div>
+        </div>
+        <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- PANE: DETAIL -->
+    <div class="pane" id="pane-detail">
+      <div class="detail-wrap">
+        <div class="dleft">
+          <button class="back" onclick="goList()">← Back to Item List</button>
+          <div class="mode-tag" id="mode-tag">Creating New Item</div>
+          <div class="thumb-tabs"><span class="act">Image</span><span>Color</span></div>
+          <div class="thumb-box"><span style="font-size:28px">🖼️</span><span>Upload image</span></div>
+          <div class="slbl">Information</div>
+          <div class="drow">
+            <div class="field" style="flex:2"><div class="lbl">Item Name <span class="req">*</span></div><input class="inp" id="d-name" type="text" placeholder="Enter item name" oninput="document.getElementById('p-name').textContent=this.value||'New Item'"></div>
+            <div class="field" style="max-width:200px"><div class="lbl">Fixed Price Items <span class="hint">?</span></div><div class="trow"><label class="tgl"><input type="checkbox" checked onchange="this.closest('.trow').querySelector('.tstate').textContent=this.checked?'Active':'Inactive'"><span class="sldr"></span></label><span class="tstate">Active</span></div></div>
+          </div>
+          <div class="drow">
+            <div class="field"><div class="lbl">Alias Name <span class="hint">?</span></div><input class="inp" type="text" placeholder="Your alias name"></div>
+            <div class="field" style="opacity:0;pointer-events:none"></div>
+          </div>
+          <div class="drow">
+            <div class="field"><div class="lbl">Item code <span class="req">*</span></div><div style="display:flex;gap:6px"><select class="fsel" style="flex:1"><option>A</option><option>B</option></select><select class="fsel" style="flex:1"><option>01</option><option>02</option></select></div></div>
+            <div class="field"><div class="lbl">SKU</div><input class="inp" type="text" placeholder="ABC001234-0"></div>
+          </div>
+          <div class="drow" style="margin-bottom:0">
+            <div class="field"><div class="lbl">Product Composition <span class="req">*</span></div><select class="fsel"><option value="">Select</option><option>Single Item</option><option>Combo</option></select></div>
+            <div class="field" style="opacity:0;pointer-events:none"></div>
+          </div>
+          <div class="sdiv"></div>
+          <div class="slbl">Pricing</div>
+          <div class="drow"><div class="field"><div class="lbl">Pricing Type <span class="req">*</span></div><select class="fsel"><option>Fixed Unit Price</option><option>Variable Price</option></select></div></div>
+          <div class="drow">
+            <div class="field"><div class="lbl">Menu Price <span class="req">*</span></div><div class="sgd"><span class="pfx">SGD</span><input class="inp" id="d-price" type="number" value="12.00" oninput="document.getElementById('p-price').textContent='SGD '+(parseFloat(this.value)||0).toFixed(2)"></div></div>
+            <div class="field"><div class="lbl">Member Price <span class="req">*</span></div><div class="sgd"><span class="pfx">SGD</span><input class="inp" type="number" value="12.00"></div></div>
+          </div>
+          <div class="drow" style="margin-bottom:0">
+            <div class="field"><div class="lbl">Purchase Cost <span class="req">*</span> <span class="hint">?</span></div><div class="sgd"><span class="pfx">SGD</span><input class="inp" type="number" value="8.00"></div></div>
+            <div class="field" style="opacity:0;pointer-events:none"></div>
+          </div>
+          <div class="sdiv"></div>
+          <div class="slbl">Other Settings</div>
+          <div class="drow" style="align-items:flex-start">
+            <div class="field"><div class="lbl">Special Instructions <span class="hint">?</span></div><div class="trow"><label class="tgl"><input type="checkbox" onchange="this.closest('.trow').querySelector('.tstate').textContent=this.checked?'Active':'Inactive'"><span class="sldr"></span></label><span class="tstate">Inactive</span></div></div>
+            <div class="field"><div class="lbl">Order Printing Control <span class="hint">?</span></div><div class="rgroup"><label class="ropt"><input type="radio" name="print" checked> Fire Item</label><label class="ropt"><input type="radio" name="print"> Hold Item</label></div></div>
+          </div>
+          <div style="height:1px;background:#f2f2f2;margin:8px 0 12px"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div class="lbl">Nutri-Grade <span class="hint">?</span></div>
+            <div class="trow" style="margin-top:0;margin-left:4px"><label class="tgl"><input type="checkbox" id="ntgl" onchange="toggleExpand('ntgl','nflds','nst')"><span class="sldr"></span></label><span id="nst" class="tstate">Inactive</span></div>
+          </div>
+          <div class="expand" id="nflds">
+            <div class="drow" style="margin-bottom:0">
+              <div class="field"><div class="lbl">Rating <span class="req">*</span></div><select class="fsel" id="gsel" onchange="updateGrade()"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+              <div class="field"><div class="lbl">Sugar % <span class="req">*</span></div><input class="inp" id="sinp" type="number" value="0" min="0" max="100" oninput="updateGrade()"></div>
+              <div class="field" style="max-width:110px"><div class="lbl">Preview</div><div style="display:flex;align-items:center;margin-top:8px"><div class="gcircle" id="gcircle">A</div><div class="glabel"><div id="gnum" style="font-size:14px;font-weight:600">0<span style="font-size:9px">%</span></div><div style="font-size:8px;color:#555">Sugar</div></div></div></div>
+            </div>
+          </div>
+          <div style="height:1px;background:#f2f2f2;margin:12px 0"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div class="lbl">BCRS Container <span class="hint" title="$0.10 refundable deposit per container">?</span></div>
+            <div class="trow" style="margin-top:0;margin-left:4px"><label class="tgl"><input type="checkbox" id="btgl" onchange="toggleBCRS(this)"><span class="sldr"></span></label><span id="bst" class="tstate">No</span></div>
+          </div>
+          <div class="expand" id="bflds">
+            <div style="display:flex;align-items:center;gap:10px;background:#f9f9f9;border:1px solid #e0e0e0;border-radius:5px;padding:10px 14px">
+              <span style="font-size:12px;color:#333;white-space:nowrap">Quantity per Pack</span>
+              <input id="qinp" type="number" value="1" min="1" oninput="updateDeposit(this.value)" style="width:64px;height:32px;border:1px solid #e0e0e0;border-radius:5px;padding:0 8px;font-size:14px;font-family:'Poppins',sans-serif;color:#333;text-align:center;outline:none">
+              <span style="font-size:12px;color:#828282">→ Deposit per transaction:</span>
+              <span id="damt" style="font-size:14px;font-weight:600;color:#072446">$0.10</span>
+              <span style="font-size:11px;color:#828282">(GST-exempt)</span>
+            </div>
+          </div>
+          <div style="height:1px;background:#f2f2f2;margin:12px 0"></div>
+          <div class="field"><div class="lbl">Description</div><textarea class="ta" id="d-desc" rows="4" placeholder="Enter description" oninput="document.getElementById('p-desc').textContent=this.value||'Item description will appear here.'"></textarea></div>
+          <div class="bottom-bar">
+            <button class="btn-o" onclick="goList()">Cancel</button>
+            <button class="btn-p" onclick="saveItem()">Save &amp; Continue</button>
+          </div>
+        </div>
+        <div class="dright">
+          <div class="ptitle">Preview how you look on mobile.</div>
+          <div class="psub">The final display is based on the QR.</div>
+          <div class="pframe">
+            <div class="pimg" id="p-emoji">🍽️</div>
+            <div class="pcontent">
+              <div class="pname" id="p-name">New Item</div>
+              <div class="pprice" id="p-price">SGD 12.00</div>
+              <div class="pdesc" id="p-desc">Item description will appear here.</div>
+              <div class="pbcrs" id="pbcrs">🔄 BCRS Deposit: $<span id="pamt">0.10</span>/container (refundable)</div>
+              <button class="padd">Add to order</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE: SETTINGS -->
+    <div class="pane" id="pane-settings">
+      <div class="set-info-banner"><strong>Information :</strong> The Subtotal Display setting is available starting from APK version 2.25.0.</div>
+      <div class="set-inner">
+        <div class="set-body">
+          <h3 style="font-size:14px;font-weight:600;color:#333;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+            Business Details
+            <span style="font-size:12px;color:#8c0000;font-weight:400;cursor:pointer">ⓘ System Data &amp; backup Protection</span>
+          </h3>
+          <div class="set-grid">
+            <div class="sf"><div class="lbl">Merchant Name</div><input class="sinp" id="s-name" value="Vino Rosso"></div>
+            <div class="sf"><div class="lbl">Template</div><select class="ssel" id="s-tpl"><option>Food &amp; Beverage</option></select></div>
+            <div class="sf"><div class="lbl">Mobile Number</div><input class="sinp" id="s-mobile" value="+886 277231080"></div>
+            <div class="sf"><div class="lbl">Country</div><select class="ssel" id="s-country"><option>Singapore</option></select></div>
+            <div class="sf"><div class="lbl">Currency</div><select class="ssel" id="s-cur"><option>Singapore dollar</option></select></div>
+            <div class="sf"><div class="lbl">Timezone</div><select class="ssel" id="s-tz"><option>(UTC+08:00) Taipei</option></select></div>
+            <div class="sf"><div class="lbl">Order Pickup Option</div><select class="ssel" id="s-pickup"><option>Email</option></select></div>
+            <div class="sf"><div class="lbl">Payment Method</div><select class="ssel" id="s-pay"><option>Online Payment &amp; 1 Other items</option></select></div>
+          </div>
+          <div class="set-divider"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 24px">
+            <div class="sf">
+              <div class="lbl">Service Type</div>
+              <div class="set-radio-row">
+                <label class="sropt"><input type="radio" name="svc" id="s-full" disabled> Full Service</label>
+                <label class="sropt"><input type="radio" name="svc" id="s-quick" checked disabled> Quick Service</label>
+              </div>
+            </div>
+            <div class="sf">
+              <div class="lbl">Service Available For</div>
+              <div style="display:flex;gap:14px;margin-top:6px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked id="s-dinein" disabled style="accent-color:#8c0000;width:15px;height:15px"> Dine In</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked id="s-takeaway" disabled style="accent-color:#8c0000;width:15px;height:15px"> Takeaway</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked id="s-delivery" disabled style="accent-color:#8c0000;width:15px;height:15px"> Delivery</label>
+              </div>
+            </div>
+          </div>
+          <div class="set-divider"></div>
+          <div class="sf">
+            <div class="lbl">Subtotal Display</div>
+            <div class="set-radio-row">
+              <label class="sropt"><input type="radio" name="sub" id="s-sub1" disabled> Before Discount</label>
+              <label class="sropt"><input type="radio" name="sub" id="s-sub2" disabled> After Discount</label>
+              <label class="sropt"><input type="radio" name="sub" id="s-sub3" checked disabled> Both</label>
+            </div>
+          </div>
+          <div class="set-divider"></div>
+                      <div class="sf">
+            <div class="lbl" style="margin-bottom:8px">BCRS Dine-In Model</div>
+            <div class="bcrs-radio-wrap">
+              <label class="bcrs-ropt" id="card-pass" onclick="selectBcrsCard('pass')">
+                <input type="radio" name="bcrs-model" id="r-pass" value="pass" checked disabled>
+                <div>
+                  <div class="bcrs-card-title">Charge customer</div>
+                  <div class="bcrs-card-desc">$0.10 deposit added at checkout. Customer reclaims at any BCRS return point.</div>
+                </div>
+              </label>
+              <label class="bcrs-ropt" id="card-absorb" onclick="selectBcrsCard('absorb')">
+                <input type="radio" name="bcrs-model" id="r-absorb" value="absorb" disabled>
+                <div>
+                  <div class="bcrs-card-title">Absorb deposit</div>
+                  <div class="bcrs-card-desc">You cover $0.10 per container. Collect empties on-premises for BCRS Ltd. reimbursement.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="set-footer">
+            <button class="btn-p" id="set-edit-btn" onclick="onSetEditSave()">Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const gc={A:'#008a4b',B:'#6aad2c',C:'#f5a623',D:'#d0021b'};
+const items=[
+  {id:1,name:'Coke Can 330ml',emoji:'🥤',cat:'Canned Drinks',active:true,bcrs:false,price:'2.50',code:'D00',sku:'ABC11002',type:'Unit',seq:0,stock:0},
+  {id:2,name:'Sparkling Water 500ml',emoji:'💧',cat:'Bottled Water',active:true,bcrs:true,price:'3.00',code:'D01',sku:'ABC11003',type:'Unit',seq:0,stock:-4},
+  {id:3,name:'Orange Juice 1L',emoji:'🍊',cat:'Bottled Drinks',active:true,bcrs:false,price:'4.50',code:'A16',sku:'A16',type:'Unit',seq:0,stock:-51},
+  {id:4,name:'Ice Pop',emoji:'🧊',cat:'Canned Drinks',active:true,bcrs:false,price:'2.00',code:'D04',sku:'',type:'Unit',seq:0,stock:0},
+  {id:5,name:'Yakult 5-pack',emoji:'🥛',cat:'',active:true,bcrs:false,price:'5.50',code:'D05',sku:'',type:'Weight',seq:0,stock:null},
+  {id:6,name:'Tiger Beer 320ml',emoji:'🍺',cat:'Canned Drinks',active:true,bcrs:true,price:'6.00',code:'A18',sku:'',type:'Weight',seq:0,stock:null},
+  {id:7,name:'Bubble Tea',emoji:'🧋',cat:'Made to Order',active:true,bcrs:false,price:'7.50',code:'A17',sku:'',type:'Unit',seq:0,stock:0},
+];
+let listMode='normal',sel=new Set(),pending=null,editing=null,catFilter='',navCollapsed=false;
+
+function toggleNav(){
+  navCollapsed=!navCollapsed;
+  document.getElementById('nav').classList.toggle('collapsed',navCollapsed);
+  document.getElementById('main').classList.toggle('collapsed',navCollapsed);
+  document.getElementById('nav-toggle-btn').textContent=navCollapsed?'▶':'◀';
+}
+function switchNav(tab){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  document.getElementById('topbar-title').textContent=tab==='menu'?'Item List':'Settings — Business Info';
+}
+function getFiltered(){return catFilter?items.filter(i=>i.cat===catFilter):items;}
+function renderHead(){
+  const t=document.getElementById('thead');
+  t.innerHTML=listMode==='normal'
+    ?`<tr><th style="width:80px">Item code</th><th style="width:100px">SKU</th><th>Name</th><th style="width:80px">Type</th><th style="width:130px">Order Sequence</th><th style="width:60px">Stock</th><th style="width:120px">Status</th><th style="width:90px">Action</th></tr>`
+    :`<tr><th style="width:40px"></th><th style="width:80px">Item code</th><th style="width:100px">SKU</th><th>Name</th><th style="width:80px">Type</th><th style="width:130px">Order Sequence</th><th style="width:60px">Stock</th><th style="width:100px">BCRS</th></tr>`;
+}
+function renderBody(){
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  getFiltered().forEach(item=>{
+    const tr=document.createElement('tr');
+    if(listMode==='normal') tr.classList.add('clickable');
+    if(sel.has(item.id)) tr.classList.add('sel');
+    const catH=item.cat?`<div class="icat">${item.cat}</div>`:`<div class="icat none">—</div>`;
+    const stockH=item.stock===null?`<span style="color:#828282">—</span>`:item.stock<0?`<span style="color:#e24b4a">${item.stock}</span>`:item.stock===0?`<span style="color:#e24b4a">0</span>`:`<span>${item.stock}</span>`;
+    const typeBadge=`<span style="border:1px solid #e0e0e0;border-radius:20px;padding:2px 10px;font-size:12px;color:#333">${item.type}</span>`;
+    const seqInput=`<input type="number" value="${item.seq}" style="width:80px;height:32px;border:1px solid #e0e0e0;border-radius:5px;padding:0 8px;font-size:13px;font-family:'Poppins',sans-serif;text-align:center;outline:none" onclick="event.stopPropagation()">`;
+    const nameCell=`<div class="item-cell"><div class="thumb">${item.emoji}</div><div><div class="iname">${item.name}</div>${catH}</div></div>`;
+    if(listMode==='bulk'){
+      tr.innerHTML=`<td><input type="checkbox" class="rcb" data-id="${item.id}"${sel.has(item.id)?' checked':''}></td><td style="font-size:13px">${item.code}</td><td style="font-size:12px;color:#828282">${item.sku||''}</td><td>${nameCell}</td><td>${typeBadge}</td><td>${seqInput}</td><td>${stockH}</td><td>${item.bcrs?'<span class="badge b-bcrs">BCRS</span>':'<span style="color:#e0e0e0;font-size:16px">—</span>'}</td>`;
+    } else {
+      const tgl=`<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:20px;border-radius:20px;background:${item.active?'#072446':'#e0e0e0'};position:relative;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.active?'right:2px':'left:2px'}"></div></div><span style="font-size:13px;color:#072446">${item.active?'Active':'Inactive'}</span></div>`;
+      tr.innerHTML=`<td style="font-size:13px">${item.code}</td><td style="font-size:12px;color:#828282">${item.sku||''}</td><td>${nameCell}</td><td>${typeBadge}</td><td>${seqInput}</td><td>${stockH}</td><td>${tgl}</td><td><div class="act-icons"><button class="ico" onclick="event.stopPropagation();goDetail(items.find(d=>d.id==${item.id}))">✏️</button><button class="ico" onclick="event.stopPropagation()">⧉</button><button class="ico" onclick="event.stopPropagation()">🗑</button></div></td>`;
+      tr.addEventListener('click',()=>goDetail(item));
+    }
+    tb.appendChild(tr);
+  });
+  document.querySelectorAll('.rcb').forEach(cb=>{
+    cb.addEventListener('change',e=>{
+      e.stopPropagation();
+      const id=parseInt(e.target.dataset.id);
+      if(e.target.checked) sel.add(id); else sel.delete(id);
+      updateBulkUI(); renderBody();
+    });
+  });
+}
+function renderTable(){renderHead();renderBody();}
+function updateBulkUI(){
+  const filtered=getFiltered(),n=sel.size,si=items.filter(d=>sel.has(d.id));
+  document.getElementById('sel-count').textContent=n===0?'0 items selected':`${n} item${n>1?'s':''} selected`;
+  document.getElementById('flag-btn').disabled=!si.some(d=>!d.bcrs);
+  document.getElementById('rm-btn').disabled=!si.some(d=>d.bcrs);
+  const sv=filtered.filter(d=>sel.has(d.id)).length;
+  document.getElementById('sel-all').indeterminate=sv>0&&sv<filtered.length;
+  document.getElementById('sel-all').checked=filtered.length>0&&sv===filtered.length;
+}
+function enterBulk(){
+  listMode='bulk'; sel.clear(); catFilter='';
+  document.getElementById('tb-normal').style.display='none';
+  document.getElementById('tb-bulk').classList.add('on');
+  const cats=[...new Set(items.map(d=>d.cat).filter(c=>c))];
+  const cs=document.getElementById('cat-sel'); cs.innerHTML='<option value="">All Categories</option>';
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cs.appendChild(o);});
+  updateBulkUI(); renderTable();
+}
+function exitBulk(){
+  listMode='normal'; sel.clear(); pending=null; catFilter='';
+  document.getElementById('tb-normal').style.display='flex';
+  document.getElementById('tb-bulk').classList.remove('on');
+  document.getElementById('bulk-acts').style.display='flex';
+  document.getElementById('bulk-confirm').style.display='none';
+  renderTable();
+}
+function onCatFilter(){catFilter=document.getElementById('cat-sel').value;sel.clear();updateBulkUI();renderBody();}
+function enterConfirm(action){
+  pending=action;
+  const si=items.filter(d=>sel.has(d.id));
+  let msg='';
+  if(action==='flag'){const n=si.filter(d=>!d.bcrs).length,sk=si.filter(d=>d.bcrs).length;msg=`Flag ${n} item${n>1?'s':''} as BCRS ($0.10 each)?`+(sk?` ${sk} already flagged will be skipped.`:'');}
+  else{const n=si.filter(d=>d.bcrs).length,sk=si.filter(d=>!d.bcrs).length;msg=`Remove BCRS from ${n} item${n>1?'s':''}?`+(sk?` ${sk} without BCRS will be skipped.`:'');}
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('bulk-acts').style.display='none';
+  document.getElementById('bulk-confirm').style.display='flex';
+}
+function backFromConfirm(){document.getElementById('bulk-acts').style.display='flex';document.getElementById('bulk-confirm').style.display='none';}
+function applyAction(){
+  const si=items.filter(d=>sel.has(d.id));let count=0;
+  if(pending==='flag'){si.filter(d=>!d.bcrs).forEach(d=>{d.bcrs=true;count++;});showToast(`✓ ${count} item${count>1?'s':''} flagged as BCRS.`,'t-ok');}
+  else{si.filter(d=>d.bcrs).forEach(d=>{d.bcrs=false;count++;});showToast(`✓ BCRS removed from ${count} item${count>1?'s':''}.`,'t-rm');}
+  exitBulk();
+}
+document.getElementById('sel-all').addEventListener('change',e=>{
+  getFiltered().forEach(d=>{if(e.target.checked) sel.add(d.id); else sel.delete(d.id);});
+  updateBulkUI(); renderBody();
+});
+function showToast(msg,cls){
+  const t=document.getElementById('ltost');
+  t.className='toast '+cls+' show';
+  document.getElementById('ltost-msg').textContent=msg;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+function goDetail(item){
+  editing=item;
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pane-detail').classList.add('active');
+  document.getElementById('topbar-title').textContent=item?'Edit Item':'Create Item';
+  document.getElementById('mode-tag').textContent=item?'Editing: '+item.name:'Creating New Item';
+  document.getElementById('d-name').value=item?item.name:'';
+  document.getElementById('d-price').value=item?item.price:'12.00';
+  document.getElementById('d-desc').value='';
+  document.getElementById('p-emoji').textContent=item?item.emoji:'🍽️';
+  document.getElementById('p-name').textContent=item?item.name:'New Item';
+  document.getElementById('p-price').textContent='SGD '+(item?item.price:'12.00');
+  document.getElementById('p-desc').textContent='Item description will appear here.';
+  const hasBcrs=item&&item.bcrs;
+  document.getElementById('btgl').checked=!!hasBcrs;
+  document.getElementById('bst').textContent=hasBcrs?'Yes':'No';
+  document.getElementById('bflds').classList.toggle('open',!!hasBcrs);
+  document.getElementById('pbcrs').classList.toggle('show',!!hasBcrs);
+  if(hasBcrs){document.getElementById('qinp').value=1;document.getElementById('damt').textContent='$0.10';document.getElementById('pamt').textContent='0.10';}
+  document.getElementById('ntgl').checked=false;
+  document.getElementById('nst').textContent='Inactive';
+  document.getElementById('nflds').classList.remove('open');
+}
+function goList(){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pane-menu').classList.add('active');
+  document.getElementById('nav-menu').classList.add('active');
+  document.getElementById('topbar-title').textContent='Item List';
+}
+function saveItem(){
+  const name=document.getElementById('d-name').value.trim()||'Unnamed Item';
+  const bcrs=document.getElementById('btgl').checked;
+  const price=document.getElementById('d-price').value||'0.00';
+  if(editing){editing.name=name;editing.bcrs=bcrs;editing.price=price;}
+  else{items.unshift({id:Date.now(),name,emoji:'🍽️',cat:'',active:true,bcrs,price,code:'—',sku:'',type:'Unit',seq:0,stock:0});}
+  showToast('✓ '+name+(editing?' updated':' created')+' successfully.','t-ok');
+  goList(); renderTable();
+}
+function toggleExpand(tid,fid,sid){
+  document.getElementById(fid).classList.toggle('open',document.getElementById(tid).checked);
+  document.getElementById(sid).textContent=document.getElementById(tid).checked?'Active':'Inactive';
+}
+function updateGrade(){
+  const g=document.getElementById('gsel').value,s=document.getElementById('sinp').value||0;
+  document.getElementById('gcircle').textContent=g;document.getElementById('gcircle').style.background=gc[g];
+  document.getElementById('gnum').innerHTML=s+'<span style="font-size:9px">%</span>';
+}
+function toggleBCRS(el){
+  document.getElementById('bflds').classList.toggle('open',el.checked);
+  document.getElementById('bst').textContent=el.checked?'Yes':'No';
+  document.getElementById('pbcrs').classList.toggle('show',el.checked);
+  if(!el.checked){document.getElementById('qinp').value=1;document.getElementById('damt').textContent='$0.10';document.getElementById('pamt').textContent='0.10';}
+}
+function updateDeposit(v){
+  const n=Math.max(1,parseInt(v)||1),a=(n*.10).toFixed(2);
+  document.getElementById('damt').textContent='$'+a;document.getElementById('pamt').textContent=a;
+}
+
+// Settings
+let settingsEditing=false;
+function setSettingsEditable(on){
+  ['s-name','s-mobile'].forEach(id=>{const el=document.getElementById(id);on?el.removeAttribute('readonly'):el.setAttribute('readonly','');el.style.background=on?'#fff':'#f5f5f5';});
+  ['s-tpl','s-country','s-cur','s-tz','s-pickup','s-pay'].forEach(id=>{const el=document.getElementById(id);on?el.removeAttribute('disabled'):el.setAttribute('disabled','');el.style.background=on?'#fff':'#f5f5f5';});
+  ['svc','sub'].forEach(n=>document.querySelectorAll(`input[name="${n}"]`).forEach(el=>on?el.removeAttribute('disabled'):el.setAttribute('disabled','')));
+  ['s-dinein','s-takeaway','s-delivery'].forEach(id=>{const el=document.getElementById(id);on?el.removeAttribute('disabled'):el.setAttribute('disabled','');});
+  ['r-pass','r-absorb'].forEach(id=>{const el=document.getElementById(id);on?el.removeAttribute('disabled'):el.setAttribute('disabled','');});
+  document.getElementById('card-pass').classList.toggle('editable',on);
+  document.getElementById('card-absorb').classList.toggle('editable',on);
+}
+function selectBcrsCard(val){
+  if(val==='absorb'){
+    document.getElementById('nea-modal').classList.add('show');
+    return;
+  }
+  document.getElementById('r-pass').checked=true;
+  document.getElementById('r-absorb').checked=false;
+}
+function confirmAbsorb(){
+  document.getElementById('r-pass').checked=false;
+  document.getElementById('r-absorb').checked=true;
+  document.getElementById('nea-modal').classList.remove('show');
+}
+function cancelAbsorb(){
+  document.getElementById('r-pass').checked=true;
+  document.getElementById('r-absorb').checked=false;
+  document.getElementById('nea-modal').classList.remove('show');
+}
+function onSetEditSave(){
+  const btn=document.getElementById('set-edit-btn');
+  if(!settingsEditing){
+    settingsEditing=true;btn.textContent='Save';setSettingsEditable(true);
+    // add Cancel button
+    if(!document.getElementById('set-cancel-btn')){
+      const cancel=document.createElement('button');
+      cancel.id='set-cancel-btn';cancel.className='btn-o';cancel.textContent='Cancel';
+      cancel.onclick=()=>{settingsEditing=false;btn.textContent='Edit';setSettingsEditable(false);cancel.remove();};
+      btn.parentNode.insertBefore(cancel,btn);
+    }
+  } else {
+    settingsEditing=false;btn.textContent='Edit';setSettingsEditable(false);
+    const c=document.getElementById('set-cancel-btn');if(c)c.remove();
+  }
+}
+
+setSettingsEditable(false);
+renderTable();
+</script>
+</html>
