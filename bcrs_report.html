@@ -96,13 +96,11 @@
       </div>
       <div class="dvd"></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="filter-label">Order type</span>
-        <select class="fsel"><option>All types</option><option>Dine In</option><option>Takeaway</option><option>Delivery</option></select>
+        <select class="fsel" id="filterType" onchange="applyFilters()"><option>All Order type</option><option>Dine In</option><option>Takeaway</option><option>Delivery</option></select>
       </div>
       <div class="dvd"></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="filter-label">Deposit status</span>
-        <select class="fsel"><option>All status</option><option>Collected</option><option>Partial</option><option>Refund</option><option>Void</option></select>
+        <select class="fsel" id="filterStatus" onchange="applyFilters()"><option>All Deposit status</option><option>Collected</option><option>Partial</option><option>Refund</option><option>Void</option></select>
       </div>
       <div class="filter-right">
         <button class="btn-export" onclick="toggleDropdown()">Export</button>
@@ -115,10 +113,10 @@
     </div>
 
     <div class="summary">
-      <div class="scard"><div class="scard-label">Deposit Collected</div><div class="scard-value red">SGD 18.40</div><div class="scard-sub">184 containers</div></div>
-      <div class="scard"><div class="scard-label">Deposit Refunded</div><div class="scard-value">-SGD 2.10</div><div class="scard-sub">21 containers returned</div></div>
-      <div class="scard"><div class="scard-label">Deposit Voided</div><div class="scard-value">-SGD 0.60</div><div class="scard-sub">6 containers voided</div></div>
-      <div class="scard"><div class="scard-label">Net Balance</div><div class="scard-value red">SGD 15.70</div><div class="scard-sub">To remit to BCRS Ltd.</div></div>
+      <div class="scard"><div class="scard-label">Deposit Collected</div><div class="scard-value red">$18.40</div><div class="scard-sub">184 containers</div></div>
+      <div class="scard"><div class="scard-label">Deposit Refunded</div><div class="scard-value">-$2.10</div><div class="scard-sub">21 containers returned</div></div>
+      <div class="scard"><div class="scard-label">Deposit Voided</div><div class="scard-value">-$0.60</div><div class="scard-sub">6 containers voided</div></div>
+      <div class="scard"><div class="scard-label">Net Balance</div><div class="scard-value red">$15.70</div><div class="scard-sub">To remit to BCRS Ltd.</div></div>
     </div>
 
     <div class="table-wrap">
@@ -273,11 +271,19 @@ function sortBy(k){
 }
 function goPage(p){var t=Math.ceil(filtered.length/rowsPerPage)||1;if(p<1||p>t)return;curPage=p;render();}
 function changeRows(v){rowsPerPage=parseInt(v);curPage=1;render();}
-function onSearch(){
+function applyFilters(){
   var q=document.getElementById('searchInput').value.toLowerCase();
-  filtered=allData.filter(function(r){return(r.id+r.item).toLowerCase().includes(q);});
+  var t=document.getElementById('filterType').value;
+  var s=document.getElementById('filterStatus').value;
+  filtered=allData.filter(function(r){
+    var matchQ=(r.id+r.item).toLowerCase().includes(q);
+    var matchT=t==='All Order type'||r.type===t;
+    var matchS=s==='All Deposit status'||r.status===s||(s==='Partial'&&r.status==='Partial');
+    return matchQ&&matchT&&matchS;
+  });
   curPage=1;render();
 }
+function onSearch(){applyFilters();}
 function toggleDropdown(){var d=document.getElementById('export-dropdown');d.style.display=d.style.display==='none'?'block':'none';}
 document.addEventListener('click',function(e){if(!e.target.closest('.filter-right'))document.getElementById('export-dropdown').style.display='none';});
 function downloadCSV(){
