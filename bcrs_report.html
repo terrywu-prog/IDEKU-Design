@@ -8,8 +8,7 @@
   body{font-family:'Poppins',sans-serif;font-size:13px;color:#333;background:#f5f5f5;min-height:100vh;display:flex}
   .sidebar{width:220px;background:#fff;border-right:1px solid #e8e8e8;flex-shrink:0;padding:20px 0}
   .logo{padding:0 20px 20px;font-size:18px;font-weight:700;color:#73000c}
-  .nav-item{padding:9px 20px;font-size:13px;color:#555;cursor:pointer;border-left:3px solid transparent}
-  .nav-item.sub{padding-left:36px;font-size:12px;color:#828282}
+  .nav-item.sub{padding:9px 36px;font-size:12px;color:#828282;cursor:pointer;border-left:3px solid transparent}
   .nav-item.sub.active{color:#73000c;background:#fff5f5;border-left:3px solid #73000c}
   .nav-label{font-size:11px;color:#bbb;padding:12px 20px 4px;letter-spacing:.5px;text-transform:uppercase}
   .main{flex:1;overflow:auto}
@@ -42,20 +41,29 @@
   .search-wrap input::placeholder{color:#aaa}
   .table-scroll{overflow-x:auto;width:100%}
   table{width:max-content;min-width:100%;border-collapse:collapse}
-  th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:#fff;background:#73000c;white-space:nowrap}
+  th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:#fff;background:#73000c;white-space:nowrap;cursor:pointer;user-select:none}
+  th.sortable:hover{background:#8a0e14}
   td{padding:10px 16px;border-bottom:1px solid #f5f5f5;font-size:12px;color:#333;white-space:nowrap;vertical-align:middle}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:#fafafa}
+  tr:nth-child(even) td{background:#fafafa}
+  tr:hover td{background:#f5f5f5}
   .total-row td{background:#fef5f5;font-weight:600;border-top:2px solid #e8e8e8}
   .total-row td:first-child{color:#73000c}
-  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
-  .b-collected{background:#e8f5e9;color:#2e7d32}
-  .b-refunded{background:#fff3e0;color:#e65100}
-  .b-partial{background:#fff8e1;color:#f57f17}
-  .b-voided{background:#f2f2f2;color:#828282}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;flex-shrink:0}
+  .dot-green{background:#4caf50}
+  .dot-red{background:#e53935}
+  .dot-orange{background:#fb8c00}
+  .dot-gray{background:#bdbdbd}
+  .status-cell{display:flex;align-items:center}
+  .status-collected{color:#2e7d32}
+  .status-refund{color:#c62828}
+  .status-partial{color:#e65100}
+  .status-void{color:#757575}
+  .sub-date{font-size:10px;color:#aaa;margin-top:2px}
   .pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #f2f2f2;font-size:12px;color:#828282}
   .page-btn{width:28px;height:28px;border:1px solid #e0e0e0;border-radius:5px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#555}
   .page-btn.active{background:#73000c;color:#fff;border-color:#73000c}
+  .page-btn:disabled{opacity:.35;cursor:default}
+  .sort-arrow{margin-left:4px;font-size:10px;opacity:.7}
 </style>
 </head>
 <body>
@@ -78,7 +86,6 @@
     <div class="topbar-title">BCRS Deposit Report</div>
     <div class="topbar-right">Currency: SGD ($)&nbsp;&nbsp;|&nbsp;&nbsp;Country: SG</div>
   </div>
-
   <div class="content">
     <div class="filters">
       <div style="display:flex;align-items:center;gap:8px">
@@ -95,7 +102,7 @@
       <div class="dvd"></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="filter-label">Deposit status</span>
-        <select class="fsel"><option>All status</option><option>Collected</option><option>Partial</option><option>Refunded</option><option>Voided</option></select>
+        <select class="fsel"><option>All status</option><option>Collected</option><option>Partial</option><option>Refund</option><option>Void</option></select>
       </div>
       <div class="filter-right">
         <button class="btn-export" onclick="toggleDropdown()">Export</button>
@@ -108,147 +115,186 @@
     </div>
 
     <div class="summary">
-      <div class="scard"><div class="scard-label">Deposit Collected</div><div class="scard-value red">SGD 1.80</div><div class="scard-sub">18 containers</div></div>
-      <div class="scard"><div class="scard-label">Deposit Refunded</div><div class="scard-value">SGD 0.30</div><div class="scard-sub">3 containers returned</div></div>
-      <div class="scard"><div class="scard-label">Deposit Voided</div><div class="scard-value">SGD 0.60</div><div class="scard-sub">3 orders voided</div></div>
-      <div class="scard"><div class="scard-label">Net Balance</div><div class="scard-value red">SGD 0.90</div><div class="scard-sub">To remit to BCRS Ltd.</div></div>
+      <div class="scard"><div class="scard-label">Deposit Collected</div><div class="scard-value red">SGD 18.40</div><div class="scard-sub">184 containers</div></div>
+      <div class="scard"><div class="scard-label">Deposit Refunded</div><div class="scard-value">-SGD 2.10</div><div class="scard-sub">21 containers returned</div></div>
+      <div class="scard"><div class="scard-label">Deposit Voided</div><div class="scard-value">-SGD 0.60</div><div class="scard-sub">6 containers voided</div></div>
+      <div class="scard"><div class="scard-label">Net Balance</div><div class="scard-value red">SGD 15.70</div><div class="scard-sub">To remit to BCRS Ltd.</div></div>
     </div>
 
     <div class="table-wrap">
       <div class="table-header">
         <div class="table-title">Transaction Details</div>
         <div class="search-wrap">
-          <input type="text" id="searchInput" placeholder="Search order ID or item" oninput="filterTable()">
+          <input type="text" id="searchInput" placeholder="Search invoice or item" oninput="onSearch()">
           <span style="color:#aaa;font-size:14px">⌕</span>
         </div>
       </div>
-
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Order ID</th>
+              <th class="sortable" onclick="sortBy('datetime')">Order Time <span class="sort-arrow" id="arr-datetime">⇅</span></th>
+              <th class="sortable" onclick="sortBy('id')">Invoice <span class="sort-arrow" id="arr-id">⇅</span></th>
               <th>Item name</th>
+              <th>Order Type</th>
+              <th>Order Status</th>
               <th>Containers</th>
-              <th>Status</th>
-              <th>Order type</th>
               <th>Deposit collected</th>
               <th>Deposit refunded</th>
               <th>Deposit voided</th>
               <th>Net balance</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>8 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2091-1</td><td>Coke Can 330ml</td><td>2</td>
-              <td><span class="badge b-collected">Collected</span></td>
-              <td>Dine In</td><td>SGD 0.20</td><td>—</td><td>—</td><td style="font-weight:500">SGD 0.20</td>
-            </tr>
-            <tr>
-              <td>8 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2090-3</td><td>Tiger Beer 320ml</td><td>1</td>
-              <td><span class="badge b-collected">Collected</span></td>
-              <td>Takeaway</td><td>SGD 0.10</td><td>—</td><td>—</td><td style="font-weight:500">SGD 0.10</td>
-            </tr>
-            <tr>
-              <td>7 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2088-2</td><td>Sparkling Water 500ml</td><td>3</td>
-              <td><span class="badge b-partial">Partial (1/3)</span></td>
-              <td>Delivery</td><td>SGD 0.30</td><td>SGD 0.10</td><td>—</td><td style="font-weight:500">SGD 0.20</td>
-            </tr>
-            <tr>
-              <td>7 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2087-1</td><td>Coke Can 330ml</td><td>4</td>
-              <td><span class="badge b-collected">Collected</span></td>
-              <td>Dine In</td><td>SGD 0.00</td><td>—</td><td>—</td><td style="font-weight:500">SGD 0.00</td>
-            </tr>
-            <tr>
-              <td>6 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2085-4</td><td>Orange Juice 1L</td><td>1</td>
-              <td><span class="badge b-collected">Collected</span></td>
-              <td>Takeaway</td><td>SGD 0.10</td><td>—</td><td>—</td><td style="font-weight:500">SGD 0.10</td>
-            </tr>
-            <tr>
-              <td>6 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2083-2</td><td>Tiger Beer 320ml</td><td>6</td>
-              <td><span class="badge b-voided">Voided</span></td>
-              <td>Dine In</td><td>SGD 0.60</td><td>—</td><td>SGD 0.60</td><td style="font-weight:500">SGD 0.00</td>
-            </tr>
-            <tr>
-              <td>5 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2079-1</td><td>Yakult 5-pack</td><td>5</td>
-              <td><span class="badge b-refunded">Refunded</span></td>
-              <td>Takeaway</td><td>SGD 0.50</td><td>SGD 0.50</td><td>—</td><td style="font-weight:500">SGD 0.00</td>
-            </tr>
-            <tr>
-              <td>4 Apr 2026</td><td style="color:#73000c;font-weight:500">INVQ-2071-3</td><td>Coke Can 330ml</td><td>2</td>
-              <td><span class="badge b-collected">Collected</span></td>
-              <td>Dine In</td><td>SGD 0.00</td><td>—</td><td>—</td><td style="font-weight:500">SGD 0.00</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td colspan="3">Total (8 records)</td>
-              <td>24</td><td></td><td></td>
-              <td>SGD 1.80</td><td>SGD 0.30</td><td>SGD 0.60</td><td>SGD 0.90</td>
-            </tr>
-          </tfoot>
+          <tbody id="tbody"></tbody>
+          <tfoot id="tfoot"></tfoot>
         </table>
       </div>
-
-      <div class="pagination">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span>Rows of page:</span>
-          <select class="fsel" style="height:28px;font-size:11px"><option>10</option><option>25</option><option>50</option></select>
-        </div>
-        <span style="margin:0 8px">Page 1 of 1</span>
-        <button class="page-btn" disabled style="opacity:.35">&#8249;</button>
-        <button class="page-btn active">1</button>
-        <button class="page-btn" disabled style="opacity:.35">&#8250;</button>
-      </div>
+      <div class="pagination" id="pagination"></div>
     </div>
   </div>
 </div>
 
 <script>
-function filterTable(){
+var items=['Coke Can 330ml','Tiger Beer 320ml','Sparkling Water Wate...','Orange Juice 1L','Yakult 5-pack','Milo 200ml','100Plus 325ml','Green Tea 500ml'];
+var types=['Dine In','Takeaway','Delivery'];
+var statusPool=['Collected','Collected','Collected','Collected','Refund','Partial','Void'];
+
+function rnd(a,b){return Math.floor(Math.random()*((b-a)+1))+a;}
+function pad(n){return n<10?'0'+n:String(n);}
+function fmtTime(h,m,ap){return pad(h)+':'+pad(m)+' '+ap;}
+function fmtDate(y,mo,d,h,m,ap){
+  var ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return pad(d)+' '+ms[mo-1]+' '+y+', '+fmtTime(h,m,ap);
+}
+
+function makeRow(mo,d,h,min,ap,st,containers,idx,actionMo,actionD,actionH,actionMin,actionAp){
+  var unitPrice=0.10;
+  var collectedAmt=containers*unitPrice;
+  var refundedAmt=0,voidedAmt=0,partialStr='';
+  var actionDate=fmtDate(2026,actionMo,actionD,actionH,actionMin,actionAp);
+  if(st==='Refund'){refundedAmt=collectedAmt;}
+  else if(st==='Partial'){var rr=rnd(1,containers-1);refundedAmt=rr*unitPrice;partialStr='('+rr+'/'+containers+')';}
+  else if(st==='Void'){voidedAmt=collectedAmt;}
+  var net=(collectedAmt-refundedAmt-voidedAmt);
+  var dateStr=fmtDate(2026,mo,d,h,min,ap);
+  return{
+    datetime:2026*100000000+mo*1000000+d*10000+(ap==='PM'?h+12:h)*100+min,
+    dateStr:dateStr,actionDate:actionDate,
+    id:'INVQ-919-'+(85-idx),
+    item:items[rnd(0,items.length-1)],
+    type:types[rnd(0,2)],
+    status:st,partialStr:partialStr,containers:containers,
+    collected:collectedAmt.toFixed(2),refunded:refundedAmt.toFixed(2),
+    voided:voidedAmt.toFixed(2),net:net.toFixed(2)
+  };
+}
+
+var allData=[];
+// 前 10 筆固定，確保四種狀態都出現，由新到舊
+allData.push(makeRow(4,8,9,20,'PM','Collected',2,0, 4,8,9,20,'PM'));
+allData.push(makeRow(4,8,7,15,'AM','Refund',3,1, 4,8,9,20,'PM'));
+allData.push(makeRow(4,7,11,30,'AM','Partial',4,2, 4,8,9,20,'PM'));
+allData.push(makeRow(4,7,9,0,'AM','Void',5,3, 4,8,9,20,'PM'));
+allData.push(makeRow(4,6,8,45,'PM','Collected',1,4, 4,6,8,45,'PM'));
+allData.push(makeRow(4,5,3,10,'PM','Refund',2,5, 4,6,8,45,'PM'));
+allData.push(makeRow(4,4,10,0,'AM','Collected',6,6, 4,4,10,0,'AM'));
+allData.push(makeRow(4,3,8,0,'AM','Partial',3,7, 4,4,10,0,'AM'));
+allData.push(makeRow(4,2,7,20,'AM','Void',4,8, 4,3,8,0,'AM'));
+allData.push(makeRow(4,1,6,20,'AM','Collected',2,9, 4,1,6,20,'AM'));
+// 剩餘 58 筆隨機
+for(var i=10;i<68;i++){
+  var mo=rnd(1,3),d=rnd(1,28),h=rnd(1,12),min=rnd(0,59),ap=rnd(0,1)?'AM':'PM';
+  var st=statusPool[rnd(0,statusPool.length-1)];
+  allData.push(makeRow(mo,d,h,min,ap,st,rnd(1,6),i,mo,Math.min(d+1,28),rnd(1,12),rnd(0,59),rnd(0,1)?'AM':'PM'));
+}
+allData.sort(function(a,b){return b.datetime-a.datetime;});
+
+var filtered=allData.slice();
+var curPage=1,rowsPerPage=10,sortKey='datetime',sortDir=-1;
+
+function dotClass(s){return s==='Collected'?'dot-green':s==='Refund'?'dot-red':s==='Partial'?'dot-orange':'dot-gray';}
+function statusClass(s){return s==='Collected'?'status-collected':s==='Refund'?'status-refund':s==='Partial'?'status-partial':'status-void';}
+
+function render(){
+  var start=(curPage-1)*rowsPerPage,end=Math.min(start+rowsPerPage,filtered.length);
+  var html='';
+  for(var i=start;i<end;i++){
+    var r=filtered[i];
+    var statusLabel=r.status+(r.partialStr?' '+r.partialStr:'');
+    var refCell=r.refunded==='0.00'?'–':'<div>-$'+r.refunded+'</div><div class="sub-date">'+r.actionDate+'</div>';
+    var voidCell=r.voided==='0.00'?'–':'<div>$'+r.voided+'</div><div class="sub-date">'+r.actionDate+'</div>';
+    html+='<tr>'+
+      '<td>'+r.dateStr+'</td>'+
+      '<td style="color:#73000c;font-weight:500">'+r.id+'</td>'+
+      '<td>'+r.item+'</td>'+
+      '<td>'+r.type+'</td>'+
+      '<td><div class="status-cell"><span class="dot '+dotClass(r.status)+'"></span><span class="'+statusClass(r.status)+'">'+statusLabel+'</span></div></td>'+
+      '<td>'+r.containers+'</td>'+
+      '<td>$'+r.collected+'</td>'+
+      '<td>'+refCell+'</td>'+
+      '<td>'+voidCell+'</td>'+
+      '<td style="font-weight:500">$'+r.net+'</td>'+
+    '</tr>';
+  }
+  document.getElementById('tbody').innerHTML=html;
+
+  var totC=0,totR=0,totV=0,totN=0,totCont=0;
+  filtered.forEach(function(r){totC+=parseFloat(r.collected);totR+=parseFloat(r.refunded);totV+=parseFloat(r.voided);totN+=parseFloat(r.net);totCont+=r.containers;});
+  document.getElementById('tfoot').innerHTML='<tr class="total-row">'+
+    '<td colspan="5">Total ('+filtered.length+' records)</td>'+
+    '<td>'+totCont+'</td>'+
+    '<td>$'+totC.toFixed(2)+'</td>'+
+    '<td>'+(totR>0?'-$'+totR.toFixed(2):'–')+'</td>'+
+    '<td>'+(totV>0?'$'+totV.toFixed(2):'–')+'</td>'+
+    '<td>$'+totN.toFixed(2)+'</td>'+
+  '</tr>';
+  renderPagination();
+}
+
+function renderPagination(){
+  var totalPages=Math.ceil(filtered.length/rowsPerPage)||1;
+  var html='<div style="display:flex;align-items:center;gap:6px"><span>Rows of page:</span>'+
+    '<select class="fsel" style="height:28px;font-size:11px" onchange="changeRows(this.value)">'+
+    [10,25,50].map(function(v){return '<option value="'+v+'"'+(rowsPerPage===v?' selected':'')+'>'+v+'</option>';}).join('')+
+    '</select></div>';
+  html+='<span style="margin:0 8px">Page '+curPage+' of '+totalPages+'</span>';
+  html+='<button class="page-btn" onclick="goPage('+(curPage-1)+')" '+(curPage===1?'disabled':'')+'>&#8249;</button>';
+  var s=Math.max(1,curPage-2),e=Math.min(totalPages,s+4);
+  for(var p=s;p<=e;p++)html+='<button class="page-btn'+(p===curPage?' active':'')+'" onclick="goPage('+p+')">'+p+'</button>';
+  html+='<button class="page-btn" onclick="goPage('+(curPage+1)+')" '+(curPage===totalPages?'disabled':'')+'>&#8250;</button>';
+  document.getElementById('pagination').innerHTML=html;
+}
+
+function sortBy(k){
+  if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}
+  ['datetime','id'].forEach(function(x){var el=document.getElementById('arr-'+x);if(el)el.textContent=x===k?(sortDir===-1?'↓':'↑'):'⇅';});
+  filtered.sort(function(a,b){return a[k]>b[k]?sortDir:a[k]<b[k]?-sortDir:0;});
+  curPage=1;render();
+}
+function goPage(p){var t=Math.ceil(filtered.length/rowsPerPage)||1;if(p<1||p>t)return;curPage=p;render();}
+function changeRows(v){rowsPerPage=parseInt(v);curPage=1;render();}
+function onSearch(){
   var q=document.getElementById('searchInput').value.toLowerCase();
-  document.querySelectorAll('tbody tr').forEach(function(r){
-    r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';
-  });
+  filtered=allData.filter(function(r){return(r.id+r.item).toLowerCase().includes(q);});
+  curPage=1;render();
 }
-function toggleDropdown(){
-  var d=document.getElementById('export-dropdown');
-  d.style.display=d.style.display==='none'?'block':'none';
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.filter-right')) document.getElementById('export-dropdown').style.display='none';
-});
+function toggleDropdown(){var d=document.getElementById('export-dropdown');d.style.display=d.style.display==='none'?'block':'none';}
+document.addEventListener('click',function(e){if(!e.target.closest('.filter-right'))document.getElementById('export-dropdown').style.display='none';});
 function downloadCSV(){
-  var rows=[['Date','Order ID','Item Name','Containers','Status','Order Type','Deposit Collected','Deposit Refunded','Deposit Voided','Net Balance'],
-    ['8 Apr 2026','INVQ-2091-1','Coke Can 330ml',2,'Collected','Dine In','SGD 0.20','—','—','SGD 0.20'],
-    ['8 Apr 2026','INVQ-2090-3','Tiger Beer 320ml',1,'Collected','Takeaway','SGD 0.10','—','—','SGD 0.10'],
-    ['7 Apr 2026','INVQ-2088-2','Sparkling Water 500ml',3,'Partial (1/3)','Delivery','SGD 0.30','SGD 0.10','—','SGD 0.20'],
-    ['7 Apr 2026','INVQ-2087-1','Coke Can 330ml',4,'Collected','Dine In','SGD 0.00','—','—','SGD 0.00'],
-    ['6 Apr 2026','INVQ-2085-4','Orange Juice 1L',1,'Collected','Takeaway','SGD 0.10','—','—','SGD 0.10'],
-    ['6 Apr 2026','INVQ-2083-2','Tiger Beer 320ml',6,'Voided','Dine In','SGD 0.60','—','SGD 0.60','SGD 0.00'],
-    ['5 Apr 2026','INVQ-2079-1','Yakult 5-pack',5,'Refunded','Takeaway','SGD 0.50','SGD 0.20','—','SGD 0.30'],
-    ['4 Apr 2026','INVQ-2071-3','Coke Can 330ml',2,'Collected','Dine In','SGD 0.00','—','—','SGD 0.00']
-  ];
-  var csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='BCRS_Deposit_Report.csv';
-  a.click();
+  var rows=[['Order Time','Invoice','Item Name','Order Type','Order Status','Containers','Deposit Collected','Deposit Refunded','Deposit Voided','Net Balance']];
+  filtered.forEach(function(r){rows.push([r.dateStr,r.id,r.item,r.type,r.status+(r.partialStr?' '+r.partialStr:''),r.containers,'$'+r.collected,(r.refunded==='0.00'?'–':'-$'+r.refunded),(r.voided==='0.00'?'–':'$'+r.voided),'$'+r.net]);});
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='BCRS_Deposit_Report.csv';a.click();
   document.getElementById('export-dropdown').style.display='none';
 }
 function downloadPDF(){
   var w=window.open('','_blank');
-  w.document.write('<html><head><title>BCRS Deposit Report</title><style>body{font-family:sans-serif;padding:24px;font-size:12px}h2{color:#73000c;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#73000c;color:#fff;padding:8px 10px;text-align:left;font-size:11px}td{padding:7px 10px;border-bottom:1px solid #eee}tfoot td{font-weight:600;background:#fef5f5;border-top:2px solid #e0e0e0}</style></head><body>');
-  w.document.write('<h2>BCRS Deposit Report</h2><p style="color:#828282;font-size:11px;margin-bottom:16px">Period: 1 Jan 2026 – 8 Apr 2026</p>');
-  w.document.write('<table><thead><tr><th>Date</th><th>Order ID</th><th>Item Name</th><th>Containers</th><th>Status</th><th>Order Type</th><th>Collected</th><th>Refunded</th><th>Voided</th><th>Net Balance</th></tr></thead><tbody>');
-  var rows=[['8 Apr 2026','INVQ-2091-1','Coke Can 330ml',2,'Collected','Dine In','SGD 0.20','—','—','SGD 0.20'],['8 Apr 2026','INVQ-2090-3','Tiger Beer 320ml',1,'Collected','Takeaway','SGD 0.10','—','—','SGD 0.10'],['7 Apr 2026','INVQ-2088-2','Sparkling Water 500ml',3,'Partial (1/3)','Delivery','SGD 0.30','SGD 0.10','—','SGD 0.20'],['7 Apr 2026','INVQ-2087-1','Coke Can 330ml',4,'Collected','Dine In','SGD 0.00','—','—','SGD 0.00'],['6 Apr 2026','INVQ-2085-4','Orange Juice 1L',1,'Collected','Takeaway','SGD 0.10','—','—','SGD 0.10'],['6 Apr 2026','INVQ-2083-2','Tiger Beer 320ml',6,'Voided','Dine In','SGD 0.60','—','SGD 0.60','SGD 0.00'],['5 Apr 2026','INVQ-2079-1','Yakult 5-pack',5,'Refunded','Takeaway','SGD 0.50','SGD 0.20','—','SGD 0.30'],['4 Apr 2026','INVQ-2071-3','Coke Can 330ml',2,'Collected','Dine In','SGD 0.00','—','—','SGD 0.00']];
-  rows.forEach(r=>{w.document.write('<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>')});
-  w.document.write('</tbody><tfoot><tr><td colspan="3">Total (8 records)</td><td>24</td><td></td><td></td><td>SGD 1.80</td><td>SGD 0.30</td><td>SGD 0.60</td><td>SGD 0.90</td></tr></tfoot></table></body></html>');
-  w.document.close();
-  w.print();
+  w.document.write('<html><head><title>BCRS Deposit Report</title><style>body{font-family:sans-serif;padding:24px;font-size:11px}h2{color:#73000c;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#73000c;color:#fff;padding:6px 8px;text-align:left}td{padding:6px 8px;border-bottom:1px solid #eee}tfoot td{font-weight:600;background:#fef5f5;border-top:2px solid #e0e0e0}</style></head><body><h2>BCRS Deposit Report</h2><table><thead><tr><th>Order Time</th><th>Invoice</th><th>Item</th><th>Type</th><th>Status</th><th>Containers</th><th>Collected</th><th>Refunded</th><th>Voided</th><th>Net</th></tr></thead><tbody>');
+  filtered.forEach(function(r){w.document.write('<tr><td>'+r.dateStr+'</td><td>'+r.id+'</td><td>'+r.item+'</td><td>'+r.type+'</td><td>'+r.status+(r.partialStr?' '+r.partialStr:'')+'</td><td>'+r.containers+'</td><td>$'+r.collected+'</td><td>'+(r.refunded==='0.00'?'–':'-$'+r.refunded)+'</td><td>'+(r.voided==='0.00'?'–':'$'+r.voided)+'</td><td>$'+r.net+'</td></tr>');});
+  w.document.write('</tbody></table></body></html>');w.document.close();w.print();
   document.getElementById('export-dropdown').style.display='none';
 }
+render();
 </script>
 </body>
 </html>
